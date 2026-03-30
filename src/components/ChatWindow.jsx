@@ -7,15 +7,56 @@ const SUGGESTIONS = [
   '製品について教えてください',
   '私に合っていますか？',
   '購入したいです！',
+  '返品できますか？',
+  'おすすめは何ですか？',
+  '営業時間を教えてください',
 ];
 
 const ChatWindow = ({ messages, onSendMessage, isThinking, expression, isSpeaking, streamingMessageId, streamingText }) => {
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef(null);
+  const suggestionsRef = useRef(null);
+  const scrollPaused = useRef(false);
+  const scrollDirection = useRef(1);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isThinking, streamingText]);
+
+  useEffect(() => {
+    const el = suggestionsRef.current;
+    if (!el) return undefined;
+
+    let animationFrameId;
+    let direction = 1;
+
+    const step = () => {
+      if (!el) return;
+      if (scrollPaused.current) {
+        animationFrameId = window.requestAnimationFrame(step);
+        return;
+      }
+
+      const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+      if (maxScroll <= 0) {
+        animationFrameId = window.requestAnimationFrame(step);
+        return;
+      }
+
+      const nextScroll = el.scrollLeft + direction;
+      if (nextScroll <= 0) {
+        direction = 1;
+      } else if (nextScroll >= maxScroll) {
+        direction = -1;
+      }
+
+      el.scrollLeft = Math.min(maxScroll, Math.max(0, el.scrollLeft + direction));
+      animationFrameId = window.requestAnimationFrame(step);
+    };
+
+    animationFrameId = window.requestAnimationFrame(step);
+    return () => window.cancelAnimationFrame(animationFrameId);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -114,13 +155,15 @@ const ChatWindow = ({ messages, onSendMessage, isThinking, expression, isSpeakin
 
       <div className="shrink-0 px-3 sm:px-5 pt-3 pb-2 bg-[#fff7ef] border-t border-[#e7d0bc]">
         <p className="text-[10px] uppercase tracking-[0.24em] text-[#8f6246] mb-2">会話例</p>
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+        <div ref={suggestionsRef} className="flex gap-2 overflow-x-auto scrollbar-hide">
           {SUGGESTIONS.map((s) => (
             <button
               key={s}
               onClick={() => !isThinking && onSendMessage(s)}
+              onMouseEnter={() => { scrollPaused.current = true; }}
+              onMouseLeave={() => { scrollPaused.current = false; }}
               disabled={isThinking}
-              className="shrink-0 text-[10px] sm:text-xs bg-[#f9ede1] border border-[#e4d2c0] text-[#6a4a36] px-3 py-1.5 rounded-full transition-colors hover:border-[#cfa47d] hover:text-[#8a603f] disabled:opacity-40 disabled:cursor-not-allowed"
+              className="shrink-0 cursor-pointer text-[10px] sm:text-xs bg-[#f9ede1] border border-[#e4d2c0] text-[#6a4a36] px-3 py-1.5 rounded-full transition-colors hover:border-[#cfa47d] hover:text-[#8a603f] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {s}
             </button>
