@@ -39,15 +39,7 @@ const ChatWindow = ({ messages, onSendMessage, isThinking, expression, isSpeakin
       <div className="flex-1 overflow-y-auto scrollbar-hide relative bg-[#fff7ef]">
 
         <div className="sticky top-0 z-10 pointer-events-none flex justify-center bg-[#fff7ef]">
-          <div
-            className="h-40 sm:h-48 md:h-52 w-full max-w-xs sm:max-w-sm"
-            style={{
-              maskImage:
-                'radial-gradient(ellipse 88% 82% at 50% 22%, black 30%, transparent 75%)',
-              WebkitMaskImage:
-                'radial-gradient(ellipse 88% 82% at 50% 22%, black 30%, transparent 75%)',
-            }}
-          >
+          <div className="h-40 sm:h-48 md:h-52 w-full max-w-xs sm:max-w-sm overflow-hidden">
             <CharacterDisplay
               expression={expression}
               isThinking={isThinking}

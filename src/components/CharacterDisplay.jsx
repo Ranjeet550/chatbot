@@ -12,14 +12,34 @@ import { motion, AnimatePresence } from 'framer-motion';
  *     no background/border of its own
  */
 const CharacterDisplay = ({ expression, isThinking, isSpeaking, compact = false }) => {
-  const getExpressionImage = (exp) => (
-    <img
-      src={`/${exp}.png`}
-      alt={exp}
-      className="w-full h-full object-contain drop-shadow-md"
-      onError={(e) => { e.target.style.display = 'none'; }}
-    />
-  );
+  const expressionImages = {
+    smile: '/smile.png',
+    empathy: '/empathy.png',
+    explanation: '/explanation.png',
+    friendliness: '/friendliness.png',
+    confidence: '/confidence.png',
+    celebration: '/celebration.png',
+  };
+
+  const getExpressionImage = (exp) => {
+    const src = expressionImages[exp] || expressionImages.smile;
+    return (
+      <img
+        src={src}
+        alt={exp}
+        className="w-full h-full max-w-full max-h-full object-contain border-0 bg-transparent"
+        style={{ mixBlendMode: 'multiply', backgroundColor: 'transparent' }}
+        onError={(e) => {
+          e.target.onerror = null;
+          if (e.target.src.endsWith('/smile.png')) {
+            e.target.style.display = 'none';
+          } else {
+            e.target.src = expressionImages.smile;
+          }
+        }}
+      />
+    );
+  };
 
   return (
     <div
@@ -28,7 +48,7 @@ const CharacterDisplay = ({ expression, isThinking, isSpeaking, compact = false 
       }`}
     >
       {/* Image wrapper — in compact mode fills 100 % of parent */}
-      <div className={`relative ${compact ? 'w-full h-full' : 'w-48 h-48'}`}>
+      <div className={`relative ${compact ? 'w-full h-full isolate bg-transparent' : 'w-48 h-48 isolate bg-transparent'}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={isThinking ? 'thinking' : expression}
