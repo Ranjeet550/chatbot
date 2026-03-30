@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /**
@@ -21,12 +21,20 @@ const CharacterDisplay = ({ expression, isThinking, isSpeaking, compact = false 
     celebration: '/celebration.png',
   };
 
+  useEffect(() => {
+    Object.values(expressionImages).forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
   const getExpressionImage = (exp) => {
     const src = expressionImages[exp] || expressionImages.smile;
     return (
       <img
         src={src}
         alt={exp}
+        loading="eager"
         className="w-full h-full max-w-full max-h-full object-contain border-0 bg-transparent"
         style={{ mixBlendMode: 'multiply', backgroundColor: 'transparent' }}
         onError={(e) => {
