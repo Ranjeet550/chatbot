@@ -1,14 +1,24 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { PHASE_ORDER } from '../constants/phases';
 
 const INITIAL_MESSAGES = [
   {
     id: '1',
     role: 'assistant',
-    text: 'Hello! Welcome to AI Okān. How can I help you today?',
+    text: 'こんにちは！AI Okānへようこそ。本日はどのようにお手伝いできますか？',
     phase: 'welcome',
   },
 ];
+
+const PHASE_NAMES_JA = {
+  welcome: 'ウェルカム',
+  gathering: '情報収集',
+  casual: 'カジュアル',
+  explanation: '説明',
+  proposal: '提案',
+  closing: 'クロージング',
+  celebration: 'お祝い',
+};
 
 const getNextPhase = (current) => {
   const idx = PHASE_ORDER.indexOf(current);
@@ -21,6 +31,28 @@ export const useChat = () => {
   const [currentPhase, setCurrentPhase] = useState('welcome');
   const [isThinking, setIsThinking] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [streamingMessageId, setStreamingMessageId] = useState(null);
+  const [streamingText, setStreamingText] = useState('');
+
+  const streamMessage = useCallback((messageId, fullText, onComplete) => {
+    let currentIndex = 0;
+    const words = fullText.split(' ');
+    
+    const streamInterval = setInterval(() => {
+      if (currentIndex < words.length) {
+        const textToShow = words.slice(0, currentIndex + 1).join(' ');
+        setStreamingText(textToShow);
+        currentIndex++;
+      } else {
+        clearInterval(streamInterval);
+        setStreamingMessageId(null);
+        setStreamingText('');
+        if (onComplete) onComplete();
+      }
+    }, 80); // 80ms per word for natural reading pace
+    
+    return () => clearInterval(streamInterval);
+  }, []);
 
   const handleSendMessage = (text) => {
     // 1. Add user message
@@ -37,19 +69,41 @@ export const useChat = () => {
       const assistantMsg = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        text: `This is a simulated response for the ${nextPhase} phase. I'm here to help!`,
+        text: '', // Start with empty text
         phase: nextPhase,
       };
 
+      // Add the message with empty text first
       setMessages((prev) => [...prev, assistantMsg]);
       setCurrentPhase(nextPhase);
       setIsThinking(false);
       setIsSpeaking(true);
+      setStreamingMessageId(assistantMsg.id);
 
-      // Stop speaking after a few seconds (lip-sync simulation)
-      setTimeout(() => setIsSpeaking(false), 3000);
+      // Full response text in Japanese
+      const phaseNameJa = PHASE_NAMES_JA[nextPhase] || nextPhase;
+      const fullText = `これは${phaseNameJa}フェーズのシミュレーション回答です。お手伝いできることはありますか？`;
+      
+      // Stream the message word by word
+      streamMessage(assistantMsg.id, fullText, () => {
+        // Update the message with the full text when streaming completes
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMsg.id ? { ...msg, text: fullText } : msg
+          )
+        );
+        setIsSpeaking(false);
+      });
     }, 2500);
   };
 
-  return { messages, currentPhase, isThinking, isSpeaking, handleSendMessage };
+  return { 
+    messages, 
+    currentPhase, 
+    isThinking, 
+    isSpeaking, 
+    handleSendMessage,
+    streamingMessageId,
+    streamingText
+  };
 };

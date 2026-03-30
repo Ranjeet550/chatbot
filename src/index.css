@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, system-ui, sans-serif;
+  line-height: 1.55;
   font-weight: 400;
 
   color-scheme: light;
-  color: #1a1a1a;
-  background-color: #f8fafc;
+  color: #3d2b1a;
+  background-color: #f6ede3;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -19,6 +19,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: radial-gradient(circle at top, #fbefd8 0%, #f2dcc4 35%, #f6ede3 100%);
 }
 
 #root {

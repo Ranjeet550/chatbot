@@ -1,21 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot } from 'lucide-react';
+import { SendHorizontal, User, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CharacterDisplay from './CharacterDisplay';
 
 const SUGGESTIONS = [
-  'Tell me about your product',
-  'Is it good for me?',
-  'I want to buy!',
+  '製品について教えてください',
+  '私に合っていますか？',
+  '購入したいです！',
 ];
 
-const ChatWindow = ({ messages, onSendMessage, isThinking, expression, isSpeaking }) => {
+const ChatWindow = ({ messages, onSendMessage, isThinking, expression, isSpeaking, streamingMessageId, streamingText }) => {
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isThinking]);
+  }, [messages, isThinking, streamingText]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -25,18 +25,23 @@ const ChatWindow = ({ messages, onSendMessage, isThinking, expression, isSpeakin
     }
   };
 
+  // Get the display text for a message
+  const getDisplayText = (msg) => {
+    if (msg.id === streamingMessageId && streamingText) {
+      return streamingText;
+    }
+    return msg.text;
+  };
+
   return (
-    <div className="flex flex-col h-full min-h-0 bg-white">
+    <div className="flex flex-col h-full min-h-0 bg-[#fff7ef]">
 
-      {/* ── Single unified scroll area ───────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide relative bg-white">
+      <div className="flex-1 overflow-y-auto scrollbar-hide relative bg-[#fff7ef]">
 
-        {/* Character — sticky at top, same bg as chat (no visible panel) */}
-        <div className="sticky top-0 z-10 pointer-events-none flex justify-center bg-white">
+        <div className="sticky top-0 z-10 pointer-events-none flex justify-center bg-[#fff7ef]">
           <div
             className="h-40 sm:h-48 md:h-52 w-full max-w-xs sm:max-w-sm"
             style={{
-              /* Aggressive radial fade — edges dissolve completely into white */
               maskImage:
                 'radial-gradient(ellipse 88% 82% at 50% 22%, black 30%, transparent 75%)',
               WebkitMaskImage:
@@ -52,7 +57,6 @@ const ChatWindow = ({ messages, onSendMessage, isThinking, expression, isSpeakin
           </div>
         </div>
 
-        {/* Messages — start immediately below the character */}
         <div className="px-3 sm:px-5 pb-4 space-y-3">
           <AnimatePresence initial={false}>
             {messages.map((msg) => (
@@ -64,23 +68,26 @@ const ChatWindow = ({ messages, onSendMessage, isThinking, expression, isSpeakin
                 className={`flex items-end gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {msg.role === 'assistant' && (
-                  <div className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-100 flex items-center justify-center shadow-sm">
-                    <Bot size={14} className="text-blue-500" />
+                  <div className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#f4e3d2] flex items-center justify-center shadow-sm">
+                    <Bot size={14} className="text-[#9b6a43]" />
                   </div>
                 )}
 
                 <div
-                  className={`max-w-[78%] sm:max-w-[70%] px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap rounded-2xl shadow-sm ${
+                  className={`max-w-[78%] sm:max-w-[70%] px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap rounded-[28px] ${
                     msg.role === 'user'
-                      ? 'bg-gradient-to-br from-violet-500 to-indigo-600 text-white rounded-br-sm'
-                      : 'bg-slate-100 text-slate-800 rounded-bl-sm'
+                      ? 'bg-[#8e4a2f] text-white shadow-[0_16px_28px_rgba(142,74,47,0.18)]'
+                      : 'bg-[#f5ece3] border border-[#ecdcd0] text-[#4d3523] shadow-[0_8px_20px_rgba(167,131,104,0.12)]'
                   }`}
                 >
-                  {msg.text}
+                  {getDisplayText(msg)}
+                  {msg.id === streamingMessageId && streamingText && (
+                    <span className="inline-block w-0.5 h-4 bg-[#a56a45] ml-0.5 animate-pulse" />
+                  )}
                 </div>
 
                 {msg.role === 'user' && (
-                  <div className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-sm">
+                  <div className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-[#b56b3e] via-[#c07a49] to-[#d69968] flex items-center justify-center shadow-sm">
                     <User size={14} className="text-white" />
                   </div>
                 )}
@@ -88,21 +95,20 @@ const ChatWindow = ({ messages, onSendMessage, isThinking, expression, isSpeakin
             ))}
           </AnimatePresence>
 
-          {/* Typing indicator */}
           {isThinking && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               className="flex items-end gap-2"
             >
-              <div className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-100 flex items-center justify-center shadow-sm">
-                <Bot size={14} className="text-blue-400 animate-pulse" />
+              <div className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#f4e3d2] flex items-center justify-center shadow-sm">
+                <Bot size={14} className="text-[#9b6a43] animate-pulse" />
               </div>
-              <div className="bg-slate-100 px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm flex gap-1.5 items-center">
+              <div className="bg-[#fbf0e6] px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm flex gap-1.5 items-center">
                 {[0, 1, 2].map((i) => (
                   <span
                     key={i}
-                    className="w-1.5 h-1.5 bg-blue-300 rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 bg-[#d9b09b] rounded-full animate-bounce"
                     style={{ animationDelay: `${i * 0.15}s` }}
                   />
                 ))}
@@ -114,43 +120,45 @@ const ChatWindow = ({ messages, onSendMessage, isThinking, expression, isSpeakin
         </div>
       </div>
 
-      {/* ── Suggestion Chips ─────────────────────────────────────────────── */}
-      <div className="shrink-0 px-3 sm:px-5 pt-2 pb-1 flex gap-2 overflow-x-auto scrollbar-hide border-t border-slate-100 bg-white">
-        {SUGGESTIONS.map((s) => (
-          <button
-            key={s}
-            onClick={() => !isThinking && onSendMessage(s)}
-            disabled={isThinking}
-            className="shrink-0 text-[10px] sm:text-xs bg-slate-50 border border-slate-200 hover:border-violet-400 hover:text-violet-600 text-slate-500 px-3 py-1.5 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {s}
-          </button>
-        ))}
+      <div className="shrink-0 px-3 sm:px-5 pt-3 pb-2 bg-[#fff7ef] border-t border-[#e7d0bc]">
+        <p className="text-[10px] uppercase tracking-[0.24em] text-[#8f6246] mb-2">会話例</p>
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              onClick={() => !isThinking && onSendMessage(s)}
+              disabled={isThinking}
+              className="shrink-0 text-[10px] sm:text-xs bg-[#f9ede1] border border-[#e4d2c0] text-[#6a4a36] px-3 py-1.5 rounded-full transition-colors hover:border-[#cfa47d] hover:text-[#8a603f] disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* ── Input Bar ────────────────────────────────────────────────────── */}
       <form
         onSubmit={handleSubmit}
-        className="shrink-0 px-3 sm:px-5 py-3 sm:py-4 border-t border-slate-100 bg-white flex gap-2 items-center"
+        className="shrink-0 px-3 sm:px-5 py-3 sm:py-4 border-t border-[#e7d0bc] bg-[#fff7ef] flex gap-2 items-center"
       >
         <input
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Type your message…"
+          placeholder="メッセージを入力…"
           disabled={isThinking}
-          className="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-full px-4 py-2 sm:py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/20 focus:border-violet-400 transition-all placeholder:text-slate-400 disabled:opacity-60"
+          className="flex-1 min-w-0 bg-white border border-[#ebdfd3] rounded-full px-5 py-3 text-sm text-[#5d4032] shadow-sm focus:outline-none focus:ring-0 focus:border-[#d3b09a] transition-all placeholder:text-[#c4a48f] disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={isThinking || !inputText.trim()}
-          className={`shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all shadow ${
+          className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-[0_14px_28px_rgba(115,55,32,0.24)] ${
             inputText.trim() && !isThinking
-              ? 'bg-gradient-to-br from-violet-500 to-indigo-600 text-white hover:opacity-90'
-              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              ? 'bg-[#a75f35] text-white hover:bg-[#8a4d2a]'
+              : 'bg-[#e5d6cb] text-[#a78c7d] cursor-not-allowed'
           }`}
+          aria-label="送信"
         >
-          <Send size={16} />
+          <SendHorizontal size={18} className="translate-x-[1px]" />
         </button>
       </form>
     </div>
