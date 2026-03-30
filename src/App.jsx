@@ -1,10 +1,10 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ChatPage from './pages/ChatPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 const App = () => (
-  <BrowserRouter>
+  <HashRouter>
     <Routes>
       {/* Redirect root to /chat */}
       <Route path="/" element={<Navigate to="/chat" replace />} />
@@ -12,7 +12,7 @@ const App = () => (
       {/* 404 catch-all */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
-  </BrowserRouter>
+  </HashRouter>
 );
 
 export default App;
